@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CARTY - אב טיפוס קארפול לאירועים</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 50: '#ecfdf5', 500: '#10b981', 600: '#059669', 700: '#047857' }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800 flex flex-col">
+
+    <!-- סרגל עליון -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-2 cursor-pointer" onclick="navigate('dashboard')">
+                <div class="bg-brand-600 text-white p-2 rounded-xl text-lg font-black tracking-wider flex items-center justify-center">
+                    <i class="fa-solid fa-car-side mr-1"></i> CARTY
+                </div>
+                <span class="text-xs bg-emerald-100 text-brand-700 px-2.5 py-1 rounded-full font-bold">אב טיפוס פעיל</span>
+            </div>
+            
+            <div id="nav-user-info" class="flex items-center gap-3"></div>
+        </div>
+    </header>
+
+    <!-- תוכן ראשי -->
+    <main class="max-w-5xl mx-auto p-4 flex-1 w-full">
+
+        <!-- באנר התראות -->
+        <div id="alert-banner" class="hidden mb-4 p-4 rounded-xl text-sm font-medium flex items-center justify-between shadow-sm"></div>
+
+        <!-- ==============================================
+             תרחיש 1: הרשמה, אימות SMS וכניסה לאזור אישי
+             ============================================== -->
+        <section id="view-auth" class="max-w-md mx-auto bg-white p-6 rounded-2xl shadow-md border border-slate-200 my-4">
+            <div class="text-center mb-6">
+                <div class="inline-block bg-brand-50 text-brand-700 text-xs px-3 py-1 rounded-full font-bold mb-2">תרחיש 1: פתיחת משתמש</div>
+                <h2 class="text-2xl font-black text-slate-800">הרשמה לאפליקציה</h2>
+                <p class="text-slate-500 text-xs mt-1">מלאו את הפרטים לקבלת קוד אימות ב-SMS</p>
+            </div>
+            
+            <!-- שלב 1: טופס הזנת נתונים -->
+            <form id="form-register" onsubmit="handleRegister(event)" class="space-y-3.5">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">שם מלא</label>
+                    <input type="text" id="reg-name" required value="ישראל ישראלי" placeholder="שם מלא" class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">סיסמה</label>
+                    <input type="password" id="reg-pass" required value="123456" placeholder="סיסמה" class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">דוא״ל</label>
+                    <input type="email" id="reg-email" required value="israel@gmail.com" placeholder="email@domain.com" class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">מספר טלפון (עבור SMS)</label>
+                    <input type="tel" id="reg-phone" required value="050-1234567" placeholder="050-0000000" class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">מגדר</label>
+                    <select id="reg-gender" class="w-full border rounded-lg p-2.5 text-sm">
+                        <option value="גבר">גבר</option>
+                        <option value="אישה">אישה</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-2.5 rounded-lg shadow transition mt-2">
+                    שלח קוד אימות ב-SMS
+                </button>
+            </form>
+
+            <!-- שלב 2: אימות באמצעות SMS -->
+            <div id="step-sms" class="hidden space-y-4 mt-4">
+                <div class="bg-emerald-50 border border-brand-200 p-3 rounded-xl text-xs text-brand-800">
+                    <i class="fa-solid fa-mobile-screen-button ml-1"></i> קוד האימות שנשלח ב-SMS לנייד שלך הוא: <strong class="text-sm font-black">1234</strong>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">הזן קוד אימות שקיבלת (4 ספרות)</label>
+                    <input type="text" id="sms-code-input" maxlength="4" placeholder="1234" class="w-full text-center tracking-widest text-xl font-bold border rounded-lg p-2.5">
+                </div>
+                <button onclick="verifySMS()" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-2.5 rounded-lg shadow">
+                    אמת והיכנס לאזור האישי באפליקציה
+                </button>
+            </div>
+        </section>
+
+        <!-- ==============================================
+             האזור האישי (Dashboard)
+             ============================================== -->
+        <section id="view-dashboard" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-6 rounded-2xl border shadow-sm gap-4">
+                <div>
+                    <span class="text-xs bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-full font-bold">האזור האישי</span>
+                    <h1 class="text-2xl font-black text-slate-800 mt-1">שלום, <span id="dash-user-name"></span> 👋</h1>
+                    <p class="text-slate-500 text-xs">הצטרפו לאירוע עם קישור/קוד או צרו אירוע חדש</p>
+                </div>
+                <button onclick="navigate('create-event')" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold px-4 py-2.5 rounded-xl shadow flex items-center gap-2">
+                    <i class="fa-solid fa-calendar-plus"></i> צור אירוע חדש (תרחיש 2)
+                </button>
+            </div>
+
+            <!-- כניסה לפי קוד אירוע -->
+            <div class="bg-white p-6 rounded-2xl border shadow-sm">
+                <h3 class="text-sm font-bold mb-2 flex items-center gap-2 text-slate-700">
+                    <i class="fa-solid fa-ticket text-brand-600"></i> כניסה לאירוע עם קוד אימות מכרטיס/הזמנה
+                </h3>
+                <div class="flex gap-2 max-w-md">
+                    <input type="text" id="join-event-code" placeholder="הזן קוד (למשל: WED2025)" class="border rounded-lg p-2.5 text-sm flex-1 uppercase">
+                    <button onclick="enterEventByCode()" class="bg-slate-800 hover:bg-slate-900 text-white text-sm font-bold px-5 rounded-lg">
+                        היכנס
+                    </button>
+                </div>
+            </div>
+
+            <!-- אירועים לדוגמה -->
+            <div>
+                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">אירועים פעילים במערכת:</h3>
+                <div id="events-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+        </section>
+
+        <!-- ==============================================
+             תרחיש 2: יצירת אירוע
+             ============================================== -->
+        <section id="view-create-event" class="hidden max-w-2xl mx-auto bg-white p-6 rounded-2xl shadow-md border">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">יצירת אירוע חדש</h2>
+                <button onclick="navigate('dashboard')" class="text-slate-400 hover:text-slate-600 text-sm">ביטול</button>
+            </div>
+            
+            <form onsubmit="handleCreateEvent(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">שם האירוע</label>
+                    <input type="text" id="ev-name" required placeholder="חתונת רחל ויוסי" class="w-full border rounded-lg p-2.5 text-sm">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">מיקום האירוע</label>
+                        <input type="text" id="ev-location" required placeholder="אולמי האחוזה, מודיעין" class="w-full border rounded-lg p-2.5 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">שעות האירוע</label>
+                        <input type="text" id="ev-time" required placeholder="19:30 - 01:00" class="w-full border rounded-lg p-2.5 text-sm">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">בעלי האירוע</label>
+                        <input type="text" id="ev-owner" required placeholder="משפחת שמידט & אלבז" class="w-full border rounded-lg p-2.5 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">פרטי התקשרות כלליים</label>
+                        <input type="text" id="ev-contact" required placeholder="052-9998888" class="w-full border rounded-lg p-2.5 text-sm">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">קוד אימות מותאם (להזמנה / כרטיס)</label>
+                    <input type="text" id="ev-code" required placeholder="CARTY77" class="w-full border rounded-lg p-2.5 text-sm uppercase">
+                </div>
+                <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-2.5 rounded-lg shadow">
+                    שמור וקבל קישור לדף האירוע
+                </button>
+            </form>
+        </section>
+
+        <!-- ==============================================
+             דף האירוע
+             ============================================== -->
+        <section id="view-event-detail" class="hidden space-y-6">
+            <!-- פרטי האירוע -->
+            <div class="bg-gradient-to-l from-slate-900 to-slate-800 text-white p-6 rounded-2xl shadow-lg">
+                <div class="flex flex-col sm:flex-row justify-between items-start gap-4">
+                    <div>
+                        <span class="bg-brand-500/20 text-brand-300 text-xs px-2.5 py-1 rounded-full font-bold border border-brand-500/30">קוד אירוע: <span id="event-display-code"></span></span>
+                        <h1 id="event-display-title" class="text-2xl font-black mt-2"></h1>
+                        <p class="text-slate-300 text-xs mt-1 flex items-center gap-3">
+                            <span><i class="fa-solid fa-location-dot ml-1 text-red-400"></i><span id="event-display-loc"></span></span>
+                            <span><i class="fa-regular fa-clock ml-1 text-blue-400"></i><span id="event-display-time"></span></span>
+                        </p>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur p-3 rounded-xl text-xs space-y-1">
+                        <div>מארגן: <span id="event-display-owner" class="font-bold"></span></div>
+                        <button onclick="copyEventLink()" class="mt-2 text-brand-300 underline block font-bold">
+                            <i class="fa-solid fa-share-nodes ml-1"></i>העתק קישור להזמנה
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- בחירת תפקיד: טרמפיסט או נהג -->
+            <div class="grid grid-cols-2 gap-3 bg-white p-2 rounded-2xl border shadow-sm">
+                <button id="btn-tab-hitchhiker" onclick="switchEventRole('hitchhiker')" class="py-3 font-bold rounded-xl text-sm transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-person-walking-luggage"></i> אני טרמפיסט (תרחיש 4)
+                </button>
+                <button id="btn-tab-driver" onclick="switchEventRole('driver')" class="py-3 font-bold rounded-xl text-sm transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-car"></i> אני נהג (תרחיש 3)
+                </button>
+            </div>
+
+            <!-- ==============================================
+                 תרחיש 3: נהג (כולל הצגת פרטי הטרמפיסט במלואם לפני האישור!)
+                 ============================================== -->
+            <div id="role-driver-section" class="hidden space-y-6">
+                
+                <!-- טופס נהג -->
+                <div id="driver-form-container" class="bg-white p-6 rounded-2xl border shadow-sm">
+                    <h3 class="text-lg font-bold mb-4 text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-plus-circle text-brand-600"></i> טופס רישום כנהג
+                    </h3>
+                    <form onsubmit="handleCreateRide(event)" class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">מיקום יציאה</label>
+                                <input type="text" id="ride-origin" required placeholder="למשל: ירושלים (מרכז)" class="w-full border rounded-lg p-2.5 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">שעת יציאה</label>
+                                <input type="time" id="ride-departure-time" required class="w-full border rounded-lg p-2.5 text-sm">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">נקודות עצירה בדרך (אם יש)</label>
+                                <input type="text" id="ride-stops" placeholder="מחלף שורק, צומת גהה" class="w-full border rounded-lg p-2.5 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">שעת חזרה משוערת</label>
+                                <input type="time" id="ride-return-time" class="w-full border rounded-lg p-2.5 text-sm">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">צד אחד או שני צדדים</label>
+                                <select id="ride-direction" class="w-full border rounded-lg p-2.5 text-sm">
+                                    <option value="both">הלוך וחזור</option>
+                                    <option value="to">הלוך בלבד</option>
+                                    <option value="from">חזור בלבד</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">מקומות פנויים הלוך וחזור</label>
+                                <input type="number" id="ride-seats" min="1" max="8" value="3" required class="w-full border rounded-lg p-2.5 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">מגדר</label>
+                                <select id="ride-gender" class="w-full border rounded-lg p-2.5 text-sm">
+                                    <option value="mixed">מעורב</option>
+                                    <option value="men">גברים</option>
+                                    <option value="women">נשים</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-4 bg-slate-50 p-3 rounded-xl border">
+                            <label class="text-xs font-bold text-slate-700">גבייה כספית (השתתפות):</label>
+                            <label class="inline-flex items-center text-sm">
+                                <input type="radio" name="ride-cost" value="yes" checked class="text-brand-600">
+                                <span class="mr-1">כן</span>
+                            </label>
+                            <label class="inline-flex items-center text-sm">
+                                <input type="radio" name="ride-cost" value="no" class="text-brand-600">
+                                <span class="mr-1">לא (חינם)</span>
+                            </label>
+                        </div>
+
+                        <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-2.5 rounded-lg shadow">
+                            הוסף אותי לרשימת הנהגים המוצגים לכולם
+                        </button>
+                    </form>
+                </div>
+
+                <!-- ניהול הנסיעה והבקשות -->
+                <div id="driver-manage-container" class="space-y-4">
+                    <div id="driver-my-ride-card"></div>
+                    
+                    <!-- הצגת בקשות טרמפיסטים עם פרטים מלאים לפני אישור -->
+                    <div class="bg-white p-5 rounded-2xl border shadow-sm">
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <h4 class="font-bold text-sm text-slate-800">בקשות טרמפיסטים הממתינות לאישורך</h4>
+                                <p class="text-xs text-slate-500">כל פרטי הטרמפיסט מוצגים לפניך לבדיקה לפני אישור או דחייה</p>
+                            </div>
+                            <span id="requests-count-badge" class="bg-brand-100 text-brand-800 text-xs px-2.5 py-0.5 rounded-full font-bold">0</span>
+                        </div>
+                        <div id="incoming-requests-list" class="space-y-3"></div>
+                    </div>
+                </div>
+
+                <!-- רשימת כלל הנהגים הקיימים המוצגים (שלב 6) -->
+                <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                    <h4 class="font-bold text-sm text-slate-700 mb-1 flex items-center gap-2">
+                        <i class="fa-solid fa-users text-brand-600"></i> רשימת הנהגים הקיימים המוצגת לכל המשתמשים
+                    </h4>
+                    <div id="all-drivers-live-list" class="space-y-2 mt-2"></div>
+                </div>
+            </div>
+
+            <!-- ==============================================
+                 תרחיש 4: טרמפיסט
+                 ============================================== -->
+            <div id="role-hitchhiker-section" class="hidden space-y-6">
+                
+                <!-- Google AI Studio Smart Matcher -->
+                <div class="bg-gradient-to-r from-indigo-50 to-purple-50 p-4 rounded-2xl border border-indigo-150">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-black text-indigo-700 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-wand-magic-sparkles text-indigo-500"></i> CARTY AI Matcher (Google AI Studio)
+                        </span>
+                        <span class="text-[10px] bg-indigo-200 text-indigo-800 px-2 py-0.5 rounded font-bold">בינה מלאכותית</span>
+                    </div>
+                    <p class="text-xs text-indigo-900 mb-2">הזן כתובת איסוף וה-AI יבחר את הנהג המתאים ביותר ויציע נקודת מפגש נוחה:</p>
+                    <div class="flex gap-2">
+                        <input type="text" id="ai-user-address" placeholder="כתובת מגורים / עיר איסוף..." class="border text-xs rounded-lg p-2 flex-1 bg-white">
+                        <button onclick="runSmartAiMatch()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition">
+                            התאם לי נהג ב-AI
+                        </button>
+                    </div>
+                    <div id="ai-recommendation-box" class="hidden mt-3 p-3 bg-white rounded-xl border border-indigo-150 text-xs text-slate-700 space-y-1"></div>
+                </div>
+
+                <!-- רשימת הנהגים הזמינים -->
+                <div>
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-slate-800">רשימת הנהגים הזמינים לאירוע</h3>
+                        <span class="text-xs text-slate-500" id="drivers-found-count"></span>
+                    </div>
+                    <div id="available-drivers-list" class="space-y-3"></div>
+                </div>
+
+                <!-- סטטוס הבקשות שהטרמפיסט שלח -->
+                <div class="bg-white p-5 rounded-2xl border shadow-sm">
+                    <h3 class="font-bold text-sm text-slate-800 mb-3">סטטוס הבקשות שהגשתי</h3>
+                    <div id="my-sent-requests-list" class="space-y-3"></div>
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- סרגל מעבר מהיר בין משתמשים לבדיקת הפרויקט -->
+    <div class="fixed bottom-3 left-3 z-50">
+        <div class="bg-white/95 backdrop-blur border border-slate-300 shadow-xl rounded-2xl p-2.5 text-xs flex items-center gap-2">
+            <span class="font-bold text-slate-600"><i class="fa-solid fa-users"></i> החלף משתמש לבדיקה:</span>
+            <button onclick="navigate('auth')" class="px-2.5 py-1 bg-emerald-100 hover:bg-emerald-200 text-brand-800 rounded font-bold">
+                <i class="fa-solid fa-user-plus ml-1"></i>תרחיש הרשמה
+            </button>
+            <button onclick="loginAs('user_driver')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded font-bold">נועם (נהג)</button>
+            <button onclick="loginAs('user_passenger')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded font-bold">יוסף (טרמפיסט)</button>
+        </div>
+    </div>
+
+    <!-- לוגיקת JavaScript מלאה -->
+    <script>
+        const APP_STATE = {
+            currentUser: null,
+            currentEventId: "EV-101",
+            users: [
+                { id: "user_owner", name: "נריה אלבז", email: "neria@carty.com", phone: "050-1112233", pass: "1234", gender: "גבר" },
+                { id: "user_driver", name: "נועם אלון (נהג)", email: "noam@carty.com", phone: "052-3334455", pass: "1234", gender: "גבר" },
+                { id: "user_passenger", name: "יוסף שמידט (טרמפיסט)", email: "yosef@carty.com", phone: "054-7778899", pass: "1234", gender: "גבר" }
+            ],
+            events: [
+                {
+                    id: "EV-101",
+                    name: "חתונת משה ושרה",
+                    location: "אולמי שמיים וארץ, עמק חפר",
+                    time: "19:00 - 02:00",
+                    owner: "משפחת שמידט & אלבז",
+                    contact: "050-1112233",
+                    code: "WED2025"
+                }
+            ],
+            rides: [
+                {
+                    id: "RIDE-1",
+                    eventId: "EV-101",
+                    driverId: "user_driver",
+                    driverName: "נועם אלון (נהג)",
+                    driverPhone: "052-3334455",
+                    origin: "ירושלים (מרכז)",
+                    departureTime: "18:15",
+                    returnTime: "01:30",
+                    stops: "מחלף לטרון, צומת גהה",
+                    direction: "both",
+                    gender: "mixed",
+                    costSharing: "yes",
+                    totalSeats: 3,
+                    availableSeats: 3
+                }
+            ],
+            // כל בקשה מכילה מראש את כל פרטי הטרמפיסט להצגה לפני הנהג
+            requests: [
+                {
+                    id: "REQ-101",
+                    rideId: "RIDE-1",
+                    eventId: "EV-101",
+                    passengerId: "user_passenger",
+                    passengerName: "יוסף שמידט (טרמפיסט)",
+                    passengerPhone: "054-7778899",
+                    passengerEmail: "yosef@carty.com",
+                    passengerGender: "גבר",
+                    pickupNote: "מחכה בתחנת האוטובוס בכניסה לעיר",
+                    status: 'pending' // ממתין לאישור הנהג
+                }
+            ]
+        };
+
+        // בעת הטעינה - פתיחה מיידית בתרחיש 1 (הרשמה)
+        window.onload = () => {
+            navigate('auth');
+            renderEventsList();
+        };
+
+        /* ==============================================================
+           תרחיש 1: פתיחת משתמש ואימות SMS
+           ============================================================== */
+        let tempRegistration = null;
+
+        function handleRegister(e) {
+            e.preventDefault();
+            tempRegistration = {
+                id: "user_" + Date.now(),
+                name: document.getElementById('reg-name').value,
+                pass: document.getElementById('reg-pass').value,
+                email: document.getElementById('reg-email').value,
+                phone: document.getElementById('reg-phone').value,
+                gender: document.getElementById('reg-gender').value
+            };
+            document.getElementById('form-register').classList.add('hidden');
+            document.getElementById('step-sms').classList.remove('hidden');
+            showAlert("קוד SMS נשלח בהצלחה לטלפון שלך (קוד לדוגמה: 1234)", "info");
+        }
+
+        function verifySMS() {
+            const code = document.getElementById('sms-code-input').value.trim();
+            if (code === "1234") {
+                APP_STATE.users.push(tempRegistration);
+                APP_STATE.currentUser = tempRegistration;
+                showAlert("אימות SMS בוצע בהצלחה! הועברת לאזור האישי", "success");
+                updateHeader();
+                navigate('dashboard');
+            } else {
+                alert("קוד שגוי. לשם הבדיקה הזן 1234");
+            }
+        }
+
+        function loginAs(userId) {
+            const user = APP_STATE.users.find(u => u.id === userId);
+            if (user) {
+                APP_STATE.currentUser = user;
+                updateHeader();
+                openEvent('EV-101');
+                showAlert(`מחובר כעת בתור: ${user.name}`, "info");
+            }
+        }
+
+        function updateHeader() {
+            const nav = document.getElementById('nav-user-info');
+            const user = APP_STATE.currentUser;
+            if (user) {
+                document.getElementById('dash-user-name').innerText = user.name;
+                nav.innerHTML = `
+                    <div class="text-xs text-right">
+                        <div class="font-bold text-slate-800">${user.name}</div>
+                        <div class="text-slate-400">${user.phone}</div>
+                    </div>
+                    <button onclick="logout()" class="text-xs text-red-500 hover:text-red-700 bg-red-50 px-2 py-1 rounded">התנתק</button>
+                `;
+            } else {
+                nav.innerHTML = `<button onclick="navigate('auth')" class="text-xs bg-brand-600 text-white px-3 py-1.5 rounded-lg">הרשמה</button>`;
+            }
+        }
+
+        function logout() {
+            APP_STATE.currentUser = null;
+            updateHeader();
+            navigate('auth');
+        }
+
+        /* ==============================================================
+           תרחיש 2: יצירת אירוע
+           ============================================================== */
+        function handleCreateEvent(e) {
+            e.preventDefault();
+            const newEv = {
+                id: "EV-" + (APP_STATE.events.length + 101),
+                name: document.getElementById('ev-name').value,
+                location: document.getElementById('ev-location').value,
+                time: document.getElementById('ev-time').value,
+                owner: document.getElementById('ev-owner').value,
+                contact: document.getElementById('ev-contact').value,
+                code: document.getElementById('ev-code').value.toUpperCase()
+            };
+            APP_STATE.events.push(newEv);
+            showAlert("האירוע נוצר! קישור האירוע נוצר בהצלחה.", "success");
+            openEvent(newEv.id);
+        }
+
+        function enterEventByCode() {
+            const code = document.getElementById('join-event-code').value.trim().toUpperCase();
+            const ev = APP_STATE.events.find(e => e.code === code);
+            if (ev) openEvent(ev.id);
+            else alert("קוד אירוע שגוי. נסו WED2025");
+        }
+
+        function openEvent(eventId) {
+            APP_STATE.currentEventId = eventId;
+            const ev = APP_STATE.events.find(e => e.id === eventId);
+            if (!ev) return;
+
+            document.getElementById('event-display-title').innerText = ev.name;
+            document.getElementById('event-display-loc').innerText = ev.location;
+            document.getElementById('event-display-time').innerText = ev.time;
+            document.getElementById('event-display-owner').innerText = ev.owner;
+            document.getElementById('event-display-code').innerText = ev.code;
+
+            navigate('event-detail');
+            switchEventRole('driver');
+        }
+
+        function copyEventLink() {
+            const ev = APP_STATE.events.find(e => e.id === APP_STATE.currentEventId);
+            navigator.clipboard?.writeText(window.location.href);
+            showAlert(`הקישור הועתק! קוד האירוע הוא ${ev.code}`, "info");
+        }
+
+        function renderEventsList() {
+            const container = document.getElementById('events-grid');
+            container.innerHTML = APP_STATE.events.map(ev => `
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center">
+                    <div>
+                        <div class="text-xs font-bold text-brand-600 mb-1">קוד אימות: ${ev.code}</div>
+                        <h4 class="font-bold text-slate-800">${ev.name}</h4>
+                        <div class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-location-dot ml-1 text-slate-400"></i>${ev.location}</div>
+                    </div>
+                    <button onclick="openEvent('${ev.id}')" class="bg-slate-100 hover:bg-brand-50 hover:text-brand-700 text-slate-700 text-xs font-bold px-3 py-2 rounded-lg transition">
+                        דף האירוע <i class="fa-solid fa-arrow-left mr-1"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        /* ==============================================================
+           תרחיש 3: נהג (כולל הצגת פרטי הטרמפיסט המלאים לפני קבלת החלטה)
+           ============================================================== */
+        function switchEventRole(role) {
+            const isDriver = role === 'driver';
+            document.getElementById('role-driver-section').classList.toggle('hidden', !isDriver);
+            document.getElementById('role-hitchhiker-section').classList.toggle('hidden', isDriver);
+
+            const tabDriver = document.getElementById('btn-tab-driver');
+            const tabHitch = document.getElementById('btn-tab-hitchhiker');
+
+            if (isDriver) {
+                tabDriver.className = "py-3 font-bold rounded-xl text-sm transition flex items-center justify-center gap-2 bg-brand-600 text-white shadow";
+                tabHitch.className = "py-3 font-bold rounded-xl text-sm transition flex items-center justify-center gap-2 bg-transparent text-slate-600 hover:bg-slate-100";
+                renderDriverView();
+            } else {
+                tabHitch.className = "py-3 font-bold rounded-xl text-sm transition flex items-center justify-center gap-2 bg-brand-600 text-white shadow";
+                tabDriver.className = "py-3 font-bold rounded-xl text-sm transition flex items-center justify-center gap-2 bg-transparent text-slate-600 hover:bg-slate-100";
+                renderHitchhikerView();
+            }
+        }
+
+        function handleCreateRide(e) {
+            e.preventDefault();
+            const seats = parseInt(document.getElementById('ride-seats').value);
+            const user = APP_STATE.currentUser || APP_STATE.users[1];
+
+            const newRide = {
+                id: "RIDE-" + Date.now(),
+                eventId: APP_STATE.currentEventId,
+                driverId: user.id,
+                driverName: user.name,
+                driverPhone: user.phone,
+                origin: document.getElementById('ride-origin').value,
+                departureTime: document.getElementById('ride-departure-time').value,
+                returnTime: document.getElementById('ride-return-time').value || "לא צוין",
+                stops: document.getElementById('ride-stops').value || "ישיר",
+                direction: document.getElementById('ride-direction').value,
+                gender: document.getElementById('ride-gender').value,
+                costSharing: document.querySelector('input[name="ride-cost"]:checked').value,
+                totalSeats: seats,
+                availableSeats: seats
+            };
+
+            APP_STATE.rides.push(newRide);
+            showAlert("נוספת לרשימת הנהגים הקיימים המוצגים לכל המשתמשים באירוע!", "success");
+            renderDriverView();
+        }
+
+        function renderDriverView() {
+            const user = APP_STATE.currentUser || APP_STATE.users[1];
+            const myRide = APP_STATE.rides.find(r => r.eventId === APP_STATE.currentEventId && r.driverId === user.id);
+            const formContainer = document.getElementById('driver-form-container');
+            const manageContainer = document.getElementById('driver-manage-container');
+
+            if (!myRide) {
+                formContainer.classList.remove('hidden');
+                manageContainer.classList.add('hidden');
+            } else {
+                formContainer.classList.add('hidden');
+                manageContainer.classList.remove('hidden');
+
+                document.getElementById('driver-my-ride-card').innerHTML = `
+                    <div class="bg-white p-5 rounded-2xl border shadow-sm flex flex-col md:flex-row justify-between gap-4">
+                        <div class="space-y-1">
+                            <span class="text-[11px] bg-emerald-100 text-brand-800 px-2 py-0.5 rounded font-bold">הנסיעה שלך פעילה</span>
+                            <h4 class="font-bold text-base text-slate-800 mt-1">מ${myRide.origin} לאירוע</h4>
+                            <div class="text-xs text-slate-500">שעת יציאה: <strong>${myRide.departureTime}</strong> | חזרה: <strong>${myRide.returnTime}</strong></div>
+                            <div class="text-xs text-slate-500">עצירות בדרך: ${myRide.stops}</div>
+                            <div class="text-xs mt-2 inline-block bg-slate-100 px-2.5 py-1 rounded-lg">
+                                מקומות פנויים: <strong class="text-brand-600 text-sm">${myRide.availableSeats}</strong> מתוך ${myRide.totalSeats}
+                            </div>
+                        </div>
+                        <div class="flex items-end">
+                            <button onclick="cancelRideByDriver('${myRide.id}')" class="text-xs bg-red-50 hover:bg-red-100 text-red-600 font-bold px-3 py-2 rounded-lg border border-red-200 transition">
+                                <i class="fa-solid fa-trash ml-1"></i> בטל נסיעה זו (תרחיש 5)
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                // =======================================================
+                // הצגת פרטי הטרמפיסט במלואם לפני שהנהג מאשר / דוחה!
+                // =======================================================
+                const incoming = APP_STATE.requests.filter(req => req.rideId === myRide.id);
+                document.getElementById('requests-count-badge').innerText = incoming.length;
+
+                const reqList = document.getElementById('incoming-requests-list');
+                if (incoming.length === 0) {
+                    reqList.innerHTML = `<div class="text-center py-4 text-xs text-slate-400">אין בקשות ממתינות ברגע זה.</div>`;
+                } else {
+                    reqList.innerHTML = incoming.map(req => `
+                        <div class="p-4 rounded-xl border ${req.status === 'approved' ? 'bg-emerald-50 border-emerald-300' : req.status === 'rejected' ? 'bg-red-50 border-red-200' : 'bg-amber-50/60 border-amber-200'}">
+                            <div class="flex flex-col sm:flex-row justify-between items-start gap-3">
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold text-sm text-slate-900">${req.passengerName}</span>
+                                        <span class="text-[10px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full font-bold">מגדר: ${req.passengerGender || 'לא צוין'}</span>
+                                        <span class="text-[10px] ${req.status === 'approved' ? 'bg-emerald-200 text-emerald-800' : req.status === 'rejected' ? 'bg-red-200 text-red-800' : 'bg-amber-200 text-amber-800'} px-2 py-0.5 rounded-full font-bold">
+                                            ${req.status === 'approved' ? 'מאושר לנסיעה ✅' : req.status === 'rejected' ? 'סורב ❌' : 'ממתין להחלטתך ⏳'}
+                                        </span>
+                                    </div>
+                                    
+                                    <!-- פרטי הטרמפיסט שמוצגים לנהג לפני האישור -->
+                                    <div class="mt-2 text-xs text-slate-700 space-y-1 bg-white/80 p-2.5 rounded-lg border border-slate-200">
+                                        <div><i class="fa-solid fa-phone ml-1.5 text-brand-600"></i><strong>טלפון טרמפיסט:</strong> <a href="tel:${req.passengerPhone}" class="underline font-bold text-brand-700">${req.passengerPhone}</a></div>
+                                        <div><i class="fa-solid fa-envelope ml-1.5 text-blue-500"></i><strong>דוא״ל:</strong> ${req.passengerEmail || 'לא צוין'}</div>
+                                        <div><i class="fa-solid fa-location-dot ml-1.5 text-amber-600"></i><strong>נקודת איסוף מבוקשת / הערת טרמפיסט:</strong> ${req.pickupNote || 'אין הערה מיוחדת'}</div>
+                                    </div>
+                                </div>
+
+                                <div class="flex sm:flex-col gap-2 w-full sm:w-auto justify-end">
+                                    ${req.status === 'pending' ? `
+                                        <button onclick="respondToRequest('${req.id}', true)" class="bg-brand-600 hover:bg-brand-700 text-white font-bold px-4 py-2 rounded-lg text-xs shadow flex items-center justify-center gap-1">
+                                            <i class="fa-solid fa-check"></i> אשר טרמפיסט
+                                        </button>
+                                        <button onclick="respondToRequest('${req.id}', false)" class="bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-2 rounded-lg text-xs shadow flex items-center justify-center gap-1">
+                                            <i class="fa-solid fa-xmark"></i> דחה בקשה
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            renderAllDriversLiveList();
+        }
+
+        function renderAllDriversLiveList() {
+            const list = document.getElementById('all-drivers-live-list');
+            const drivers = APP_STATE.rides.filter(r => r.eventId === APP_STATE.currentEventId);
+            if (drivers.length === 0) {
+                list.innerHTML = `<div class="text-xs text-slate-400">אין נהגים רשומים לאירוע זה.</div>`;
+                return;
+            }
+            list.innerHTML = drivers.map(d => `
+                <div class="bg-white p-2.5 rounded-xl border border-slate-200 flex justify-between items-center text-xs">
+                    <div>
+                        <strong class="text-slate-800">${d.driverName}</strong>
+                        <span class="text-slate-500 mr-2">מוצא: ${d.origin} (${d.departureTime})</span>
+                    </div>
+                    <span class="bg-slate-100 px-2 py-0.5 rounded text-[11px] font-bold text-brand-700">${d.availableSeats} מקומות פנויים</span>
+                </div>
+            `).join('');
+        }
+
+        /* ==============================================================
+           תרחיש 4: טרמפיסט (הגשת בקשה כולל פרטים מזהים)
+           ============================================================== */
+        function renderHitchhikerView() {
+            const rides = APP_STATE.rides.filter(r => r.eventId === APP_STATE.currentEventId);
+            document.getElementById('drivers-found-count').innerText = `${rides.length} נהגים מציעים טרמפ`;
+
+            const user = APP_STATE.currentUser || APP_STATE.users[2];
+            const container = document.getElementById('available-drivers-list');
+
+            if (rides.length === 0) {
+                container.innerHTML = `<div class="bg-white p-6 rounded-2xl text-center text-xs text-slate-400 border">אין עדיין נהגים זמינים.</div>`;
+            } else {
+                container.innerHTML = rides.map(ride => {
+                    const req = APP_STATE.requests.find(rq => rq.rideId === ride.id && rq.passengerId === user.id);
+                    return `
+                        <div class="bg-white p-4 rounded-2xl border shadow-sm flex flex-col md:flex-row justify-between gap-3">
+                            <div class="space-y-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold text-slate-800 text-sm">${ride.driverName}</span>
+                                    <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">${ride.gender === 'mixed' ? 'מעורב' : ride.gender === 'men' ? 'גברים' : 'נשים'}</span>
+                                    <span class="text-[10px] ${ride.costSharing === 'yes' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-brand-800'} px-2 py-0.5 rounded-full">
+                                        ${ride.costSharing === 'yes' ? 'השתתפות בהוצאות' : 'חינם'}
+                                    </span>
+                                </div>
+                                <div class="text-xs text-slate-600"><i class="fa-solid fa-location-dot ml-1 text-brand-600"></i>מוצא: <strong>${ride.origin}</strong></div>
+                                <div class="text-xs text-slate-500"><i class="fa-regular fa-clock ml-1"></i>יציאה: ${ride.departureTime} | חזרה: ${ride.returnTime}</div>
+                                <div class="text-xs text-slate-400">עצירות אפשריות: ${ride.stops}</div>
+                            </div>
+
+                            <div class="flex flex-row md:flex-col justify-between md:justify-center items-end gap-2 border-t md:border-t-0 pt-2 md:pt-0">
+                                <div class="text-xs text-slate-600">מקומות: <strong class="text-brand-600">${ride.availableSeats}</strong> פנויים</div>
+                                ${req ? `
+                                    <span class="text-xs font-bold ${req.status === 'approved' ? 'text-brand-600' : req.status === 'rejected' ? 'text-red-500' : 'text-amber-500'}">
+                                        ${req.status === 'approved' ? 'הבקשה אושרה! פרטי הנהג למטה' : req.status === 'rejected' ? 'בקשתך סורבה' : 'ממתין לתשובת הנהג'}
+                                    </span>
+                                ` : ride.availableSeats > 0 ? `
+                                    <button onclick="requestRide('${ride.id}')" class="bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow">
+                                        בקש להצטרף לנהג
+                                    </button>
+                                ` : `
+                                    <button disabled class="bg-slate-200 text-slate-400 text-xs font-bold px-4 py-2 rounded-lg">רכב מלא</button>
+                                `}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            renderMySentRequests();
+        }
+
+        function requestRide(rideId) {
+            const ride = APP_STATE.rides.find(r => r.id === rideId);
+            if (!ride) return;
+
+            const user = APP_STATE.currentUser || APP_STATE.users[2];
+            const note = prompt("הזן נקודת איסוף מבוקשת או הערה לנהג (יוצג לו לפני שיאשר):", "מחכה בתחנת האוטובוס המרכזית");
+            if (note === null) return; // ביטול
+
+            const newReq = {
+                id: "REQ-" + Date.now(),
+                rideId: ride.id,
+                eventId: APP_STATE.currentEventId,
+                passengerId: user.id,
+                passengerName: user.name,
+                passengerPhone: user.phone,
+                passengerEmail: user.email,
+                passengerGender: user.gender || "גבר",
+                pickupNote: note,
+                status: 'pending'
+            };
+
+            APP_STATE.requests.push(newReq);
+            showAlert("בקשתך נשלחה לנהג יחד עם כל פרטייך! הנהג יבחן את הפרטים ויאשר.", "info");
+            renderHitchhikerView();
+        }
+
+        function respondToRequest(reqId, isApproved) {
+            const req = APP_STATE.requests.find(r => r.id === reqId);
+            if (!req) return;
+            const ride = APP_STATE.rides.find(r => r.id === req.rideId);
+
+            if (isApproved) {
+                if (ride.availableSeats <= 0) {
+                    alert("אין מקומות פנויים!");
+                    return;
+                }
+                req.status = 'approved';
+                ride.availableSeats -= 1;
+                showAlert(`אישרת את הטרמפיסט ${req.passengerName}! פרטי הקשר שלכם סונכרנו.`, "success");
+            } else {
+                req.status = 'rejected';
+                showAlert(`דחית את בקשת הטרמפיסט ${req.passengerName}.`, "info");
+            }
+
+            renderDriverView();
+        }
+
+        function renderMySentRequests() {
+            const user = APP_STATE.currentUser || APP_STATE.users[2];
+            const myRequests = APP_STATE.requests.filter(r => r.passengerId === user.id && r.eventId === APP_STATE.currentEventId);
+            const container = document.getElementById('my-sent-requests-list');
+
+            if (myRequests.length === 0) {
+                container.innerHTML = `<div class="text-xs text-slate-400">טרם שלחת בקשות לנסיעה זו.</div>`;
+                return;
+            }
+
+            container.innerHTML = myRequests.map(req => {
+                const ride = APP_STATE.rides.find(r => r.id === req.rideId);
+                return `
+                    <div class="p-3 rounded-xl border text-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 ${req.status === 'approved' ? 'bg-emerald-50 border-emerald-200' : req.status === 'rejected' ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200'}">
+                        <div>
+                            <div class="font-bold text-slate-800">נהג: ${ride ? ride.driverName : 'נסיעה בוטלה'}</div>
+                            <div class="text-slate-500">סטטוס: <strong>${req.status === 'approved' ? 'הבקשה אושרה! פרטי הנהג מוצגים לפניך:' : req.status === 'rejected' ? 'הבקשה סורבה - באפשרותך לבקש מנהג אחר' : 'הבקשה נשלחה והנהג בוחן את פרטיך...'}</strong></div>
+                            ${req.status === 'approved' && ride ? `
+                                <div class="mt-1 text-brand-700 font-bold flex items-center gap-3">
+                                    <span><i class="fa-solid fa-phone ml-1"></i>טלפון הנהג: ${ride.driverPhone}</span>
+                                    <a href="https://wa.me/972${ride.driverPhone.replace(/[^0-9]/g, '').slice(1)}" target="_blank" class="bg-emerald-600 text-white px-2 py-0.5 rounded text-[10px] hover:bg-emerald-700">
+                                        <i class="fa-brands fa-whatsapp ml-1"></i>פתח וואטסאפ לנהג
+                                    </a>
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div>
+                            <button onclick="cancelBookingByPassenger('${req.id}')" class="text-red-500 hover:text-red-700 underline text-[11px]">
+                                בטל בקשה (תרחיש 5)
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        /* ==============================================================
+           תרחיש 5: ביטול קישור
+           ============================================================== */
+        function cancelRideByDriver(rideId) {
+            if (!confirm("לבטל את הנסיעה? כל הטרמפיסטים יקבלו עדכון על ביטול.")) return;
+            APP_STATE.requests.filter(r => r.rideId === rideId).forEach(req => req.status = 'rejected');
+            APP_STATE.rides = APP_STATE.rides.filter(r => r.id !== rideId);
+            showAlert("הנסיעה בוטלה, נמחקה מהרשימות ונשלח עדכון לטרמפיסטים.", "info");
+            renderDriverView();
+        }
+
+        function cancelBookingByPassenger(reqId) {
+            const req = APP_STATE.requests.find(r => r.id === reqId);
+            if (!req) return;
+            const ride = APP_STATE.rides.find(r => r.id === req.rideId);
+            if (ride && req.status === 'approved') {
+                ride.availableSeats += 1;
+            }
+            APP_STATE.requests = APP_STATE.requests.filter(r => r.id !== reqId);
+            showAlert("הבקשה בוטלה. המקום פונה בחזרה לנהג.", "info");
+            renderHitchhikerView();
+        }
+
+        /* בינה מלאכותית */
+        function runSmartAiMatch() {
+            const addr = document.getElementById('ai-user-address').value.trim();
+            const box = document.getElementById('ai-recommendation-box');
+            if (!addr) {
+                alert("אנא הזן כתובת מגורים");
+                return;
+            }
+            box.classList.remove('hidden');
+            box.innerHTML = `<span class="text-indigo-600 font-bold"><i class="fa-solid fa-spinner fa-spin ml-1"></i> CARTY-AI מנתח התאמות...</span>`;
+
+            setTimeout(() => {
+                const driver = APP_STATE.rides.find(r => r.eventId === APP_STATE.currentEventId && r.availableSeats > 0);
+                if (driver) {
+                    box.innerHTML = `
+                        <div class="font-bold text-slate-800 text-xs">✅ התאמה חכמה:</div>
+                        <div class="text-slate-600 text-xs mt-1">בהתאם למיקומך ב-<strong>"${addr}"</strong>, הנהג המומלץ ביותר הוא <strong>${driver.driverName}</strong> (יוצא מ-${driver.origin}).</div>
+                        <div class="bg-indigo-50 p-2 rounded text-[11px] text-indigo-900 mt-1 border border-indigo-100">
+                            <strong>נקודת איסוף מומלצת:</strong> כדאי לקבוע במחלף הראשי הקרוב כדי למנוע כניסת הנהג לפקקים.
+                        </div>
+                    `;
+                } else {
+                    box.innerHTML = `לא נמצא נהג פנוי כרגע.`;
+                }
+            }, 600);
+        }
+
+        /* ניווט */
+        function navigate(viewName) {
+            ['view-auth', 'view-dashboard', 'view-create-event', 'view-event-detail'].forEach(v => {
+                document.getElementById(v)?.classList.add('hidden');
+            });
+            if (viewName === 'auth') {
+                document.getElementById('view-auth').classList.remove('hidden');
+                document.getElementById('form-register').classList.remove('hidden');
+                document.getElementById('step-sms').classList.add('hidden');
+            }
+            if (viewName === 'dashboard') {
+                document.getElementById('view-dashboard').classList.remove('hidden');
+                renderEventsList();
+            }
+            if (viewName === 'create-event') document.getElementById('view-create-event').classList.remove('hidden');
+            if (viewName === 'event-detail') document.getElementById('view-event-detail').classList.remove('hidden');
+        }
+
+        function showAlert(msg, type = "info") {
+            const b = document.getElementById('alert-banner');
+            b.classList.remove('hidden', 'bg-emerald-100', 'text-emerald-800', 'bg-blue-100', 'text-blue-800');
+            b.classList.add(type === "success" ? 'bg-emerald-100' : 'bg-blue-100');
+            b.classList.add(type === "success" ? 'text-emerald-800' : 'text-blue-800');
+            b.innerHTML = `<span>${msg}</span><button onclick="this.parentElement.classList.add('hidden')" class="font-bold">✕</button>`;
+            setTimeout(() => b.classList.add('hidden'), 5000);
+        }
+    </script>
+</body>
+</html>
